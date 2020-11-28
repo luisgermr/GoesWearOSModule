@@ -13,9 +13,19 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
+import com.example.wearmodule.`interface`.ViajeApiService
+import com.example.wearmodule.models.Viaje
+import com.example.wearmodule.util.ApiClient
+import com.example.wearmodule.util.URL_API
 import kotlinx.android.synthetic.main.activity_main.*
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : WearableActivity() {
+    private lateinit var viajeService: ViajeApiService
     private var notificationId = 1
     var arrive=false
     private val id = "my_channel_01"
@@ -32,6 +42,25 @@ class MainActivity : WearableActivity() {
         // Enables Always-on
         setAmbientEnabled()
         var eventId = 1
+        viajeService = ApiClient.retrofit.create(ViajeApiService::class.java)
+        var userId: Long = 0
+        viajeService.getPasajeroInfo(userId).enqueue(object :Callback<Viaje>{
+            override fun onResponse(call:Call<Viaje>?,response:Response<Viaje>?){
+                var conductor = response?.body()
+                if (conductor != null){
+                    tvDriverName.text=conductor.nombres
+                    tvCarModel.text=conductor.modelo
+                    tvCarPlaca.text=conductor.placa
+                }
+                else{
+
+                }
+            }
+
+            override fun onFailure(call: Call<Viaje>?, t: Throwable?) {
+                t?.printStackTrace()
+            }
+        })
         val driverIntent = Intent(this, DriverPhotoActivity::class.java).let {
             it.putExtra(EXTRA_EVENT_ID, eventId)
             PendingIntent.getActivity(this, REQUEST_CODE, it, 0)
